@@ -26,6 +26,7 @@
 #include <deal.II/lac/block_vector.h>
 #include <deal.II/lac/sparse_matrix.h>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <numeric>
 #include <ostream>
@@ -69,10 +70,13 @@ int main() {
   AffineConstraints<double> constraints;
   SparsityPattern sparsity_pattern;
 
-  double stab = 1;
-  const unsigned int stages = 2;
+  double stab = 1.0e-6;
+  std::cout << "stab = " << stab << std::endl;
+  // const unsigned int stages = 2;
   // const unsigned int stages = Butcher<Method::irk_2_2_1>::stages;
   const double final_time = 1 / (std::pow(2 * numbers::PI, 2));
+  //const double final_time = 0.0007916; 
+  std::cout << "Final time = " << std::setprecision(16)<<final_time << std::endl;
   const double wave_speed = std::pow(2 * numbers::PI, 2);
   // End of internal objects
 
@@ -90,6 +94,8 @@ int main() {
   compute_time_step time_step_data(mesh_size, wave_speed, final_time, CFL);
 
   double time_step = time_step_data.time_step;
+
+  //time_step = 0.000791572;
 
   std::cout << "time_step =" << time_step << std::endl;
 
@@ -117,8 +123,8 @@ int main() {
 
   vectors.old_solution.block(0) = vectors.initial_condition;
 
-  // std::cout<<"Initial condition =
-  // "<<vectors.old_solution.block(0)<<std::endl;
+  // std::cout << "Initial condition = " << vectors.old_solution.block(0)
+  //          << std::endl;
 
   std::vector<BlockVector<double>> parabolic_precomputed; // 2 = stages
   std::vector<BlockVector<double>> stage_U;
@@ -156,7 +162,7 @@ int main() {
     stage_U[0] = vectors.old_solution;
 
     // Stage 1
-    // std::cout << "Airy: stage 1" << std::endl;
+    //std::cout << "Airy: stage 1" << std::endl;
     matrices.set_new_timestep(dof_handler, time_step, stab);
     parabolic_solver_.set_new_solver(matrices.system_matrix);
 
@@ -164,8 +170,8 @@ int main() {
     parabolic_solver_.parabolic_step(stage_U[0], stage_U[1], vectors.data,
                                      parabolic_precomputed[1]);
 
-    // std::cout << "In airy: stage_U[1] = " << stage_U[1].block(0)
-    //           << stage_U[1].block(1) << std::endl;
+    //std::cout << "In airy: stage_U[1] = " << stage_U[1].block(0)
+    //          << stage_U[1].block(1) << std::endl;
 
     // Final stage
     //std::cout << "Airy: stage 2" << std::endl;
@@ -177,16 +183,16 @@ int main() {
                                      parabolic_precomputed[0]);
 
     //std::cout << "In airy: stage_U[2] = " << stage_U[2].block(0)
-    //          << stage_U[2].block(1) << std::endl;
+    //           << stage_U[2].block(1) << std::endl;
 
     vectors.old_solution = stage_U[2];
 
-    time += 2*time_step;
+    time += 2. * time_step;
     ++time_step_number;
-    std::cout << std::endl << std::endl;
+    //std::cout << std::endl << std::endl;
   }
 
-// Second order method but inefficient
+  // Second order method but inefficient
 
 #if 0 
 while (time_step_number < number_of_time_steps) {
@@ -223,8 +229,7 @@ while (time_step_number < number_of_time_steps) {
     ++time_step_number;
     std::cout << std::endl << std::endl;
   }
-#endif 
-
+#endif
 
 #if 0 
   while (time < final_time) {

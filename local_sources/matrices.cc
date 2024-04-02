@@ -34,7 +34,7 @@ void matrices_for_problem<dim>::initialize(
 template <int dim>
 void matrices_for_problem<dim>::construct_matrices(
     const DoFHandler<dim> &dof_handler, const double &tau, const double &stab) {
-  std::cout << "Constructing matrices with time step =" << tau << std::endl;
+  // std::cout << "Constructing matrices with time step =" << tau << std::endl;
   QGauss<dim> quadrature_formula(fe.degree + 1);
   FEValues<dim> fe_values(fe, quadrature_formula,
                           update_values | update_gradients |
@@ -195,7 +195,7 @@ void matrices_for_problem<dim>::construct_matrices(
     std::cout << "Constructed matrix = " << std::endl;
     system_matrix.print_formatted(std::cout);
     std::cout << std::endl;
-#endif 
+#endif
 
     system_solver.initialize(system_matrix);
     restriction_solver.initialize(restriction_matrix);
@@ -409,7 +409,8 @@ void matrices_for_problem<dim>::construct_matrices(
 template <int dim>
 void matrices_for_problem<dim>::set_new_timestep(
     const DoFHandler<dim> &dof_handler, const double &tau, const double &stab) {
-    std::cout<<"Reconstructing matrices with time step = "<<tau<<std::endl; 
+  //std::cout << "Reconstructing matrices with time step = " << tau << std::endl;
+
   for (unsigned int i = 0; i < dim + 1; ++i) {
     system_matrix.block(0, i) = 0;
   }
@@ -428,7 +429,6 @@ void matrices_for_problem<dim>::set_new_timestep(
     double m_ij = 0;
     double a_ij = 0;
     double n_x_ij = 0;
-    double b_x_ij = 0;
 
     FullMatrix<double> local_system_00(dofs_per_cell, dofs_per_cell);
     FullMatrix<double> local_system_01(dofs_per_cell, dofs_per_cell);
@@ -469,15 +469,12 @@ void matrices_for_problem<dim>::set_new_timestep(
             m_ij = (phi_i * phi_j) * fe_values.JxW(q);
             a_ij = (grad_phi_i * grad_phi_j) * fe_values.JxW(q);
             n_x_ij = (B * grad_phi_i * phi_j) * fe_values.JxW(q);
-            b_x_ij = (phi_i * B * grad_phi_j) * fe_values.JxW(q);
 
             // std::cout<<"In constructor: m_ij = "<<m_ij<<std::endl;
             // std::cout<<"In constructor: a_ij = "<<a_ij<<std::endl;
 
             local_system_00(i, j) += m_ij + stab * tau * a_ij;
             local_system_01(i, j) += -tau * a_ij - tau * stab * n_x_ij;
-            local_system_10(i, j) += -stab * b_x_ij + a_ij;
-            local_system_11(i, j) += stab * m_ij - n_x_ij;
           }
         }
       }
@@ -488,21 +485,11 @@ void matrices_for_problem<dim>::set_new_timestep(
       constraints.distribute_local_to_global(local_system_01, local_dof_indices,
                                              system_matrix.block(0, 1));
     }
-
-    for (unsigned int j = 0; j < dof_handler.n_dofs(); ++j) {
-      restriction_rhs.block(0, 0).diag_element(j) = 1;
-      restriction_matrix.block(0, 0).diag_element(j) = 1;
-    }
-
-#if 0
+    #if 0
     std::cout << "Reconstructed matrix = " << std::endl;
     system_matrix.print_formatted(std::cout);
     std::cout << std::endl;
-#endif 
-
-    system_solver.initialize(system_matrix);
-    restriction_solver.initialize(restriction_matrix);
-    mass_solver.initialize(mass_update_matrix);
+    #endif 
   }
 
   if (dim == 2) {

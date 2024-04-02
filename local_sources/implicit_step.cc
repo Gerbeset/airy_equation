@@ -48,7 +48,7 @@ void implicit_step::step(const BlockVector<double> &old_U,
   constraints.set_zero(rhs_data.block(0));
   constraints.set_zero(rhs_data.block(1));
 
-  //std::cout << "In airy: rhs_data at mass: " << rhs_data.block(0) << std::endl
+  //std::cout << "In airy: rhs_data at mass: " << rhs_data.block(0) 
   //          << rhs_data.block(1) << std::endl;
 
   rhs_data.add(1., new_rhs_data);
@@ -62,6 +62,10 @@ void implicit_step::step(const BlockVector<double> &old_U,
   system_solver.vmult(new_U, rhs_data);
   constraints.distribute(new_U.block(0));
   constraints.distribute(new_U.block(1));
+
+  //std::cout << "In airy:: solution = " << new_U.block(0) << new_U.block(1)
+  //          << std::endl
+  //          << std::endl;
 };
 
 #if 0
@@ -100,7 +104,7 @@ void implicit_step::stage_step(
   }
 
   rhs_mass.vmult(rhs_data, U_old);
-
+da
   constraints.set_zero(rhs_data.block(0));
   constraints.set_zero(rhs_data.block(1));
 
