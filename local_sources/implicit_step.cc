@@ -47,6 +47,9 @@ void implicit_step::set_new_restriction_solver(
 void implicit_step::step(const BlockVector<double> &old_U,
                          BlockVector<double> &new_U,
                          const BlockVector<double> &new_rhs_data) {
+
+  std::cout<<"new_rhs_data = "<<new_rhs_data.block(0)<<" "<<new_rhs_data.block(1)<<std::endl<<std::endl; 
+
   rhs_mass.vmult(rhs_data, old_U);
   constraints.set_zero(rhs_data.block(0));
   constraints.set_zero(rhs_data.block(1));

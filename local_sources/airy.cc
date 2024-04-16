@@ -64,7 +64,7 @@ int main() {
 
   Timer timer;
 
-  FE_Q<dim> fe(2);
+  FE_Q<dim> fe(1);
 
   Triangulation<dim> triangulation;
 
@@ -135,8 +135,8 @@ int main() {
 
   vectors.old_solution.block(0) = vectors.initial_condition;
 
-  // std::cout << "Initial condition = " << vectors.old_solution.block(0)
-  //           << std::endl;
+  std::cout << "Initial condition = " << vectors.old_solution.block(0)
+            << std::endl;
 
   std::vector<BlockVector<double>> parabolic_precomputed; // 2 = stages
   std::vector<BlockVector<double>> stage_U;
@@ -165,41 +165,66 @@ int main() {
 
   implicit.solve_restriction(vectors.old_solution, vectors.restriction_data);
 
+  std::cout << "U_0 Z_0 = " << vectors.restriction_data.block(0) << " "
+            << vectors.restriction_data.block(1) << std::endl
+            << std::endl;
+
   compute_g.get_G_of_U(vectors.restriction_data, parabolic_precomputed[0]);
+
+  std::cout << "G(U^0) = " << parabolic_precomputed[0].block(0) << " "
+            << parabolic_precomputed[0].block(1) << std::endl
+            << std::endl;
 
   const double gamma = 0.5 + 0.5 * (1. / std::sqrt(3.));
 
   while (time < final_time) {
 
-    if (time_step_number % 50 == 0.0) {
-      std::cout << "Current time = " << time_step_number << std::endl;
-    }
+    std::cout << "time = " << time_step_number << std::endl;
+    // if (time_step_number % 50 == 0.0) {
+    //   std::cout << "Current time = " << time_step_number << std::endl;
+    //  }
 
     stage_U[0] = vectors.old_solution;
-    // std::cout<<"stage_U[0] = "<<stage_U[0].block(0)<<"
-    // "<<stage_U[0].block(1)<<std::endl; Stage 1: std::cout << "Airy: stage 1"
-    // << std::endl;
+    std::cout << "stage_U[0] = " << stage_U[0].block(0) << " "
+              << stage_U[0].block(1) << std::endl<<std::endl;
+    // Stage 1:
+    std::cout << "Airy: stage 1" << std::endl;
+
     matrices.set_new_timestep(dof_handler, 3. * gamma * time_step, stab);
     parabolic_solver_.set_new_solver(matrices.system_matrix);
 
     pre_step<1>({{1. - 3. * gamma}}, {{parabolic_precomputed[0]}}, time_step,
                 vectors.data);
 
+    std::cout << "rhs_data at stage 1 = " << vectors.data.block(0) << " "
+              << vectors.data.block(1) << std::endl
+              << std::endl;
+
     parabolic_solver_.parabolic_step(stage_U[0], stage_U[1], vectors.data,
                                      parabolic_precomputed[1]);
 
-    // std::cout<<"stage_U[1] = "<<stage_U[1].block(0)<<"
-    // "<<stage_U[1].block(1)<<std::endl; Stage 2: std::cout << "Airy: stage 2"
-    // << std::endl;
+    std::cout << "stage_U[1] = " << stage_U[1].block(0) << " "
+              << stage_U[1].block(1) << std::endl<<std::endl;
+
+    // Stage 2:
+    std::cout << "Airy: stage 2" << std::endl;
     pre_step<2>({{6. * gamma - 1., 2. - 9. * gamma}},
                 {{parabolic_precomputed[0], parabolic_precomputed[1]}},
                 time_step, vectors.data);
+
+    std::cout << "rhs_data at stage 2 = " << vectors.data.block(0) << " "
+              << vectors.data.block(1) << std::endl
+              << std::endl;
+
     parabolic_solver_.parabolic_step(stage_U[1], stage_U[2], vectors.data,
                                      parabolic_precomputed[2]);
 
-    // std::cout<<"stage_U[2] = "<<stage_U[2].block(0)<<"
-    // "<<stage_U[2].block(1)<<std::endl<<std::endl; Stage 3: std::cout <<
-    // "Airy: stage 3" << std::endl;
+    std::cout << "stage_U[2] = " << stage_U[2].block(0) << " "
+              << stage_U[2].block(1) << std::endl
+              << std::endl<<std::endl;
+
+    // Stage 3:
+    std::cout << "Airy: stage 3" << std::endl;
     matrices.set_new_timestep(dof_handler, 0, stab);
     parabolic_solver_.set_new_solver(matrices.system_matrix);
 
@@ -207,8 +232,17 @@ int main() {
                 {{parabolic_precomputed[0], parabolic_precomputed[1],
                   parabolic_precomputed[2]}},
                 time_step, vectors.data);
+
+    std::cout << "rhs_data at stage 3 = " << vectors.data.block(0) << " "
+              << vectors.data.block(1) << std::endl
+              << std::endl;
+
     parabolic_solver_.parabolic_step(stage_U[2], stage_U[3], vectors.data,
                                      parabolic_precomputed[0]);
+
+    std::cout << "stage_U[3] = " << stage_U[3].block(0) << " "
+              << stage_U[3].block(1) << std::endl
+              << std::endl;
 
     vectors.old_solution = stage_U[3];
 

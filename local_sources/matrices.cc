@@ -412,7 +412,7 @@ void matrices_for_problem<dim>::construct_matrices(
 template <int dim>
 void matrices_for_problem<dim>::set_new_timestep(
     const DoFHandler<dim> &dof_handler, const double &tau, const double &stab) {
-  //std::cout << "Reconstructing matrices with time step = " << tau << std::endl;
+  std::cout << "Reconstructing matrices with time step = " << tau << std::endl;
 
   for (unsigned int i = 0; i < dim + 1; ++i) {
     system_matrix.block(0, i) = 0;
