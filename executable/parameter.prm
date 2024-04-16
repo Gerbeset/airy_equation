@@ -1,4 +1,4 @@
-set number_of_refinements = 5
+set number_of_refinements = 10
 set degree_of_polys = 1
 set CFL = 0.5
 set order = 2 

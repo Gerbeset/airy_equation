@@ -161,8 +161,8 @@ void implicit_step::stage_correction_step(
 BlockVector<double>
 implicit_step::backward_euler(const BlockVector<double> &U_old) {
   rhs_mass.vmult(rhs_data, U_old);
-  constraints.distribute(rhs_data.block(0));
-  constraints.distribute(rhs_data.block(1));
+  constraints.set_zero(rhs_data.block(0));
+  constraints.set_zero(rhs_data.block(1));
 
   system_solver.vmult(U_new, rhs_data);
   constraints.distribute(U_new.block(0));
@@ -193,23 +193,22 @@ implicit_step::crank_nicholson_step(const BlockVector<double> &U_old) {
 void implicit_step::solve_restriction(BlockVector<double> &U_old,
                                       BlockVector<double> &result) {
 
-  std::cout<<"restriction_rhs_matrix at solve"<<std::endl;             
-  restriction_rhs_matrix.print_formatted(std::cout);
-  std::cout<<std::endl; 
+  //std::cout<<"restriction_rhs_matrix at solve"<<std::endl;             
+  //restriction_rhs_matrix.print_formatted(std::cout);
+  //std::cout<<std::endl; 
 
   restriction_rhs_matrix.vmult(data, U_old);
   constraints.set_zero(data.block(0));
   constraints.set_zero(data.block(1));
 
-  std::cout<<"restriction_rhs = "<<data.block(0)<<" "<<data.block(1)<<std::endl<<std::endl; 
+  // std::cout<<"restriction_rhs = "<<data.block(0)<<" "<<data.block(1)<<std::endl<<std::endl; 
   
   restirction_solver.vmult(result, data);
   constraints.distribute(result.block(0));
   constraints.distribute(result.block(1));  
   
-  std::cout<<"U_0 Z_0 = "<<result.block(0)<<" "<<result.block(1)<<std::endl<<std::endl; 
+  // std::cout<<"U_0 Z_0 = "<<result.block(0)<<" "<<result.block(1)<<std::endl<<std::endl; 
   
-
 }
 
 #if 0 

@@ -28,7 +28,7 @@ void parabolic_solver::parabolic_step(const BlockVector<double> &old_solution,
                                       const BlockVector<double> &new_rhs_data,
                                       BlockVector<double> &new_parabolic_data) {
   implict_step_.step(old_solution, solution, new_rhs_data);
-  std::cout<<"in parabolic_solver: test 1"<<std::endl; 
+  // std::cout<<"in parabolic_solver: test 1"<<std::endl; 
   compute_g.get_G_of_U(solution, new_parabolic_data);
 }
 

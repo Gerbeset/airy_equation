@@ -64,7 +64,7 @@ int main() {
 
   Timer timer;
 
-  FE_Q<dim> fe(1);
+  FE_Q<dim> fe(2);
 
   Triangulation<dim> triangulation;
 
@@ -117,9 +117,9 @@ int main() {
 
   matrices.set_new_timestep(dof_handler, time_step, stab);
 
-  //std::cout << "system_matrix = " << std::endl;
-  //matrices.system_matrix.print_formatted(std::cout);
-  //std::cout << std::endl;
+  // std::cout << "system_matrix = " << std::endl;
+  // matrices.system_matrix.print_formatted(std::cout);
+  // std::cout << std::endl;
 
   compute_g.initialize(matrices.system_matrix.get_sparsity_pattern(),
                        matrices.rhs_stiff, constraints);
@@ -145,120 +145,91 @@ int main() {
   temp.reinit(matrices.system_matrix.n_block_cols(),
               matrices.system_matrix.block(0, 0).n());
 
-  for (unsigned int i = 0; i < 3; ++i) {
+  for (unsigned int i = 0; i < 4; ++i) {
     stage_U.push_back(temp);
   }
 
-  for (unsigned int i = 0; i < 3; ++i) {
+  for (unsigned int i = 0; i < 4; ++i) {
     parabolic_precomputed.push_back(temp);
   }
 
   parabolic_solver parabolic_solver_;
   // templated int dim
-  // parabolic_solver_.prepare<1>(matrices, constraints);
+  parabolic_solver_.prepare<1>(matrices, constraints);
 
-  // implicit_step implicit;
-  // implicit.initialize(matrices.system_matrix.get_sparsity_pattern(),
-  //                     matrices.rhs_mass, matrices.restriction_rhs,
-  //                     constraints);
-  // implicit.set_new_solver(matrices.system_matrix);
-  // implicit.set_new_restriction_solver(matrices.restriction_matrix);
+  implicit_step implicit;
+  implicit.initialize(matrices.system_matrix.get_sparsity_pattern(),
+                      matrices.rhs_mass, matrices.restriction_rhs, constraints);
+  implicit.set_new_solver(matrices.system_matrix);
+  implicit.set_new_restriction_solver(matrices.restriction_matrix);
 
-#if 0 
-  std::cout<<"restriction_rhs_10 = "<<std::endl;
-  matrices.restriction_rhs.block(1,0).print_formatted(std::cout);
-  std::cout<<std::endl; 
-  std::cout<<"initial condition = "<<vectors.old_solution.block(0)<<std::endl<<std::endl; 
-  matrices.restriction_rhs.block(1, 0).vmult(vectors.initial_condition,
-                                             vectors.old_solution.block(0));
-  constraints.set_zero(vectors.initial_condition); 
-  std::cout<<" matrix * vector = "<<vectors.initial_condition<<std::endl;
-#endif
+  implicit.solve_restriction(vectors.old_solution, vectors.restriction_data);
 
-#if 0 
-  std::cout << "Initial condition = " << vectors.initial_condition << std::endl
-            << std::endl;
-
-  std::cout << "rhs_data BEFORE mass = " << vectors.data.block(0)<<" "
-            << vectors.data.block(1) << std::endl
-            << std::endl;
-
-  matrices.rhs_mass.vmult(vectors.data, vectors.old_solution);
-
-  std::cout << "rhs_data AFTER mass = " << vectors.data.block(0)<<" "
-            << vectors.data.block(1) << std::endl
-            << std::endl;
-  
-  constraints.set_zero(vectors.data.block(0)); 
-  constraints.set_zero(vectors.data.block(1)); 
-
-    std::cout << "rhs_data AFTER constraint = " << vectors.data.block(0) <<" "
-            << vectors.data.block(1) << std::endl
-            << std::endl;
-
-#endif
-
-  // std::cout << "Old solution = " << vectors.old_solution.block(0) << " "
-  //           << vectors.old_solution.block(1) << std::endl
-  //           << std::endl;
-
-  // std::cout<<"restriction_rhs_matrix"<<std::endl;
-  // matrices.restriction_rhs.print_formatted(std::cout);
-  // std::cout<<std::endl<<std::endl;
-
-  // std::cout<<"restriction_matrix"<<std::endl;
-  // matrices.restriction_matrix.print_formatted(std::cout);
-  // std::cout<<std::endl<<std::endl;
-
-  // matrices.restriction_rhs.vmult(vectors.restriction_data,
-  //                                vectors.old_solution);
-  // std::cout << "restriction_data BEFORE constraints.set_zero() = "
-  //           << vectors.restriction_data.block(0) << " "
-  //           << vectors.restriction_data.block(1) << std::endl
-  //           << std::endl;
-
-  // constraints.set_zero(vectors.restriction_data.block(0));
-  // constraints.set_zero(vectors.restriction_data.block(1));
-
-  // std::cout << "restriction_data AFTER constraints.set_zero() = "
-  //           << vectors.restriction_data.block(0) << " "
-  //           << vectors.restriction_data.block(1) << std::endl
-  //           << std::endl;
-
-  // matrices.restriction_solver.vmult(vectors.restriction_solution,
-  //                                   vectors.restriction_data);
-
-  // std::cout << "restriction solution BEFORE constraints.distribute = "
-  //           << vectors.restriction_solution.block(0) << " "
-  //           << vectors.restriction_solution.block(1) << std::endl
-  //           << std::endl;
-
-  // constraints.distribute(vectors.restriction_solution.block(0));
-  // constraints.distribute(vectors.restriction_solution.block(1));
-
-  // std::cout << " restriction solution AFTER constraints.distribute = "
-  //           << vectors.restriction_solution.block(0) << " "
-  //           << vectors.restriction_solution.block(1) << std::endl
-  //           << std::endl;
-
-  // implicit.solve_restriction(vectors.old_solution, vectors.restriction_data);
-  // std::cout << "restriction_data =  " << vectors.restriction_data.block(0)
-  //           << " " << vectors.restriction_data.block(1) << std::endl
-  //           << std::endl;
-
-  // compute_g.get_G_of_U(vectors.restriction_data, parabolic_precomputed[0]);
+  compute_g.get_G_of_U(vectors.restriction_data, parabolic_precomputed[0]);
 
   const double gamma = 0.5 + 0.5 * (1. / std::sqrt(3.));
 
-#if 0 
-  // Third order stepping
-  while (time_step_number < number_of_time_steps) {
+  while (time < final_time) {
+
+    if (time_step_number % 50 == 0.0) {
+      std::cout << "Current time = " << time_step_number << std::endl;
+    }
+
+    stage_U[0] = vectors.old_solution;
+    // std::cout<<"stage_U[0] = "<<stage_U[0].block(0)<<"
+    // "<<stage_U[0].block(1)<<std::endl; Stage 1: std::cout << "Airy: stage 1"
+    // << std::endl;
+    matrices.set_new_timestep(dof_handler, 3. * gamma * time_step, stab);
+    parabolic_solver_.set_new_solver(matrices.system_matrix);
+
+    pre_step<1>({{1. - 3. * gamma}}, {{parabolic_precomputed[0]}}, time_step,
+                vectors.data);
+
+    parabolic_solver_.parabolic_step(stage_U[0], stage_U[1], vectors.data,
+                                     parabolic_precomputed[1]);
+
+    // std::cout<<"stage_U[1] = "<<stage_U[1].block(0)<<"
+    // "<<stage_U[1].block(1)<<std::endl; Stage 2: std::cout << "Airy: stage 2"
+    // << std::endl;
+    pre_step<2>({{6. * gamma - 1., 2. - 9. * gamma}},
+                {{parabolic_precomputed[0], parabolic_precomputed[1]}},
+                time_step, vectors.data);
+    parabolic_solver_.parabolic_step(stage_U[1], stage_U[2], vectors.data,
+                                     parabolic_precomputed[2]);
+
+    // std::cout<<"stage_U[2] = "<<stage_U[2].block(0)<<"
+    // "<<stage_U[2].block(1)<<std::endl<<std::endl; Stage 3: std::cout <<
+    // "Airy: stage 3" << std::endl;
+    matrices.set_new_timestep(dof_handler, 0, stab);
+    parabolic_solver_.set_new_solver(matrices.system_matrix);
+
+    pre_step<3>({{3. / 4. - 3 * gamma, 6. * gamma - 2., 9. / 4. - 3 * gamma}},
+                {{parabolic_precomputed[0], parabolic_precomputed[1],
+                  parabolic_precomputed[2]}},
+                time_step, vectors.data);
+    parabolic_solver_.parabolic_step(stage_U[2], stage_U[3], vectors.data,
+                                     parabolic_precomputed[0]);
+
+    vectors.old_solution = stage_U[3];
+
+    ++time_step_number;
+    time += 3. * time_step;
+  }
+
+#if 0
+  // Third order stepping; inefficient
+  while (time<final_time) {
     ++time_step_number;
     time += time_step;
 
+    if (time_step_number % 50 == 0.0) {
+      std::cout << "Current time = " << time_step_number << std::endl;
+    }
+
     stage_U[0] = vectors.old_solution;
-    // Stage 1:
-    std::cout << "Airy: stage 1" << std::endl;
+    // std::cout<<"stage_U[0] = "<<stage_U[0].block(0)<<"
+    // "<<stage_U[0].block(1)<<std::endl; Stage 1: std::cout << "Airy: stage 1"
+    // << std::endl;
     matrices.set_new_timestep(dof_handler, gamma * time_step, stab);
     parabolic_solver_.set_new_solver(matrices.system_matrix);
 
@@ -268,16 +239,18 @@ int main() {
     parabolic_solver_.parabolic_step(stage_U[0], stage_U[1], vectors.data,
                                      parabolic_precomputed[1]);
 
-    // Stage 2:
-    std::cout << "Airy: stage 2" << std::endl;
-    pre_step<2>({{3. * gamma - 1. / 3., 2. / 3. - 3. * gamma}},
+    // std::cout<<"stage_U[1] = "<<stage_U[1].block(0)<<"
+    // "<<stage_U[1].block(1)<<std::endl; Stage 2: std::cout << "Airy: stage 2"
+    // << std::endl;
+    pre_step<2>({{2. * gamma - 1. / 3., 2. / 3. - 3. * gamma}},
                 {{parabolic_precomputed[0], parabolic_precomputed[1]}},
                 time_step, vectors.data);
     parabolic_solver_.parabolic_step(stage_U[1], stage_U[2], vectors.data,
                                      parabolic_precomputed[2]);
 
-    // Stage 3:
-    std::cout << "Airy: stage 3" << std::endl;
+    // std::cout<<"stage_U[2] = "<<stage_U[2].block(0)<<"
+    // "<<stage_U[2].block(1)<<std::endl<<std::endl; Stage 3: std::cout <<
+    // "Airy: stage 3" << std::endl;
     matrices.set_new_timestep(dof_handler, 0, stab);
     parabolic_solver_.set_new_solver(matrices.system_matrix);
 
@@ -289,9 +262,55 @@ int main() {
                                      parabolic_precomputed[0]);
 
     vectors.old_solution = stage_U[3];
+  }
+#endif
 
-    time += 3. * time_step;
+// Third order with time step counter
+#if 0 
+  while (time_step_number < number_of_time_steps) {
     ++time_step_number;
+    time += time_step;
+
+    if (time_step_number % 50 == 0.0) {
+      std::cout << "Current time = " << time_step_number << std::endl;
+    }
+
+    stage_U[0] = vectors.old_solution;
+    // std::cout<<"stage_U[0] = "<<stage_U[0].block(0)<<"
+    // "<<stage_U[0].block(1)<<std::endl; Stage 1: std::cout << "Airy: stage 1"
+    // << std::endl;
+    matrices.set_new_timestep(dof_handler, gamma * time_step, stab);
+    parabolic_solver_.set_new_solver(matrices.system_matrix);
+
+    pre_step<1>({{1. / 3. - gamma}}, {{parabolic_precomputed[0]}}, time_step,
+                vectors.data);
+
+    parabolic_solver_.parabolic_step(stage_U[0], stage_U[1], vectors.data,
+                                     parabolic_precomputed[1]);
+
+    // std::cout<<"stage_U[1] = "<<stage_U[1].block(0)<<"
+    // "<<stage_U[1].block(1)<<std::endl; Stage 2: std::cout << "Airy: stage 2"
+    // << std::endl;
+    pre_step<2>({{2. * gamma - 1. / 3., 2. / 3. - 3. * gamma}},
+                {{parabolic_precomputed[0], parabolic_precomputed[1]}},
+                time_step, vectors.data);
+    parabolic_solver_.parabolic_step(stage_U[1], stage_U[2], vectors.data,
+                                     parabolic_precomputed[2]);
+
+    // std::cout<<"stage_U[2] = "<<stage_U[2].block(0)<<"
+    // "<<stage_U[2].block(1)<<std::endl<<std::endl; Stage 3: std::cout <<
+    // "Airy: stage 3" << std::endl;
+    matrices.set_new_timestep(dof_handler, 0, stab);
+    parabolic_solver_.set_new_solver(matrices.system_matrix);
+
+    pre_step<3>({{1. / 4. - gamma, 2. * gamma - 2. / 3., 3. / 4. - gamma}},
+                {{parabolic_precomputed[0], parabolic_precomputed[1],
+                  parabolic_precomputed[2]}},
+                time_step, vectors.data);
+    parabolic_solver_.parabolic_step(stage_U[2], stage_U[3], vectors.data,
+                                     parabolic_precomputed[0]);
+
+    vectors.old_solution = stage_U[3];
   }
 #endif
 
@@ -452,36 +471,36 @@ a,
 #endif
 
   // LOW ORDER METHOD
-  //std::cout << "rhs_mass = " << std::endl;
-  //matrices.rhs_mass.print_formatted(std::cout);
-  //std::cout << std::endl;
-
+  // std::cout << "rhs_mass = " << std::endl;
+  // matrices.rhs_mass.print_formatted(std::cout);
+  // std::cout << std::endl;
+#if 0 
   while (time_step_number < number_of_time_steps) {
-    std::cout << "time number: " << time_step_number << std::endl;
+    //std::cout << "time number: " << time_step_number << std::endl;
     ++time_step_number;
     time += time_step;
 
-    std::cout << "old_solution = " << vectors.old_solution.block(0) << " "
-              << vectors.old_solution.block(1) << std::endl;
+    //std::cout << "old_solution = " << vectors.old_solution.block(0) << " "
+    //          << vectors.old_solution.block(1) << std::endl;
 
     matrices.rhs_mass.vmult(vectors.data, vectors.old_solution);
     constraints.set_zero(vectors.data.block(0));
     constraints.set_zero(vectors.data.block(1));
 
-    std::cout << "rhs_data = " << vectors.data.block(0) << " "
-              << vectors.data.block(1) << std::endl;
+    //std::cout << "rhs_data = " << vectors.data.block(0) << " "
+    //          << vectors.data.block(1) << std::endl;
 
     matrices.system_solver.vmult(vectors.solution, vectors.data);
     constraints.distribute(vectors.solution.block(0));
     constraints.distribute(vectors.solution.block(1));
 
-    std::cout << "solution = " << vectors.solution.block(0) << " "
-              << vectors.solution.block(1) << std::endl
-              << std::endl;
+    //std::cout << "solution = " << vectors.solution.block(0) << " "
+    //          << vectors.solution.block(1) << std::endl
+    //          << std::endl;
 
     vectors.old_solution = vectors.solution;
   }
-
+#endif
 
   // vectors.final_solution = vectors.old_solution.block(0);
   // std::cout<<"New: final_solution = "<<vectors.final_solution<<std::endl;
@@ -522,7 +541,7 @@ while(time_step_number< number_of_time_steps)
 
   vectors.old_solution = vectors.solution;
 }
-#endif 
+#endif
 
 #if 0 
 
@@ -558,8 +577,9 @@ while(time_step_number <number_of_time_steps)
 
   vectors.final_solution = vectors.old_solution.block(0);
 
-  std::cout << "New: final_solution = " << vectors.final_solution << std::endl
-            << std::endl;
+  // std::cout << "New: final_solution = " << vectors.final_solution <<
+  // std::endl
+  //           << std::endl;
 
   // std::cout << "Airy: final computed time = " << time << std::endl;
 
