@@ -22,7 +22,10 @@ class vectors_for_problem
     BlockVector<double> solution; 
     BlockVector<double> old_solution; 
     BlockVector<double> data; 
+    BlockVector<double> restriction_data; 
+    BlockVector<double> restriction_solution; 
     
+
     Vector<double> initial_condition; 
     Vector<double> final_solution; 
 

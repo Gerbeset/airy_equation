@@ -133,7 +133,6 @@ void matrices_for_problem<dim>::construct_matrices(
             local_system_11(i, j) += stab * m_ij - n_x_ij;
 
             local_restriction_rhs_10(i, j) += stab * b_x_ij - a_ij;
-
             local_restricition_matrix_11(i, j) += stab * m_ij - n_x_ij;
 
             // Observe that this compute G(U), whereas the system matrix has
@@ -191,15 +190,19 @@ void matrices_for_problem<dim>::construct_matrices(
       restriction_matrix.block(0, 0).diag_element(j) = 1;
     }
 
+    restriction_solver.initialize(restriction_matrix); 
+    system_solver.initialize(system_matrix); 
+
+  //std::cout<<"restriction_rhs"<<std::endl; 
+  //restriction_rhs.print_formatted(std::cout); 
+  //std::cout<<std::endl; 
 #if 0
     std::cout << "Constructed matrix = " << std::endl;
     system_matrix.print_formatted(std::cout);
     std::cout << std::endl;
 #endif
 
-    system_solver.initialize(system_matrix);
-    restriction_solver.initialize(restriction_matrix);
-    mass_solver.initialize(mass_update_matrix);
+
   }
 
   if (dim == 2) {
@@ -633,7 +636,7 @@ void matrices_for_problem<dim>::set_new_timestep(
       restriction_matrix.block(0, 0).diag_element(j) = 1;
     }
 
-    system_solver.initialize(system_matrix);
+    // system_solver.initialize(system_matrix);
     // restriction_solver.initialize(restriction_matrix);
     // mass_solver.initialize(mass_update_matrix);
   }

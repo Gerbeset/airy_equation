@@ -4,6 +4,7 @@
 #include <deal.II/lac/sparse_direct.h>
 #include <deal.II/lac/sparse_matrix.h>
 #include <deal.II/lac/vector.h>
+#include <iostream>
 
 implicit_step::implicit_step() = default;
 
@@ -24,6 +25,8 @@ void implicit_step::initialize(
 
   rhs_data.reinit(in_mass_matrix.n_block_cols(),
                   in_mass_matrix.block(0, 0).n());
+  data.reinit(in_mass_matrix.n_block_cols(),
+                  in_mass_matrix.block(0, 0).n()); 
 }
 
 void implicit_step::set_new_solver(
@@ -189,8 +192,24 @@ implicit_step::crank_nicholson_step(const BlockVector<double> &U_old) {
 
 void implicit_step::solve_restriction(BlockVector<double> &U_old,
                                       BlockVector<double> &result) {
+
+  std::cout<<"restriction_rhs_matrix at solve"<<std::endl;             
+  restriction_rhs_matrix.print_formatted(std::cout);
+  std::cout<<std::endl; 
+
   restriction_rhs_matrix.vmult(data, U_old);
+  constraints.set_zero(data.block(0));
+  constraints.set_zero(data.block(1));
+
+  std::cout<<"restriction_rhs = "<<data.block(0)<<" "<<data.block(1)<<std::endl<<std::endl; 
+  
   restirction_solver.vmult(result, data);
+  constraints.distribute(result.block(0));
+  constraints.distribute(result.block(1));  
+  
+  std::cout<<"U_0 Z_0 = "<<result.block(0)<<" "<<result.block(1)<<std::endl<<std::endl; 
+  
+
 }
 
 #if 0 

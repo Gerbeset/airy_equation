@@ -38,3 +38,8 @@ template void
 pre_step<2>(const std::array<double, 2> weights,
             const std::vector<BlockVector<double>> &parabolic_data,
             const double tau, BlockVector<double> &rhs_data);
+
+template void
+pre_step<3>(const std::array<double, 3> weights,
+            const std::vector<BlockVector<double>> &parabolic_data,
+            const double tau, BlockVector<double> &rhs_data);

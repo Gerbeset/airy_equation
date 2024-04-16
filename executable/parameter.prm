@@ -1,5 +1,7 @@
-set number_of_refinements = 6
+set number_of_refinements = 5
 set degree_of_polys = 1
 set CFL = 0.5
 set order = 2 
 set tableau_1d = "irk_2_2_1"
+set final_time = 0.002
+
