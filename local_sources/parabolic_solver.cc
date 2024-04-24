@@ -27,9 +27,12 @@ void parabolic_solver::parabolic_step(const BlockVector<double> &old_solution,
                                       BlockVector<double> &solution,
                                       const BlockVector<double> &new_rhs_data,
                                       BlockVector<double> &new_parabolic_data) {
+  std::cout<<"parabolic_test 1"<<std::endl; 
   implict_step_.step(old_solution, solution, new_rhs_data);
   // std::cout<<"in parabolic_solver: test 1"<<std::endl; 
+  std::cout<<"parabolic test 2"<<std::endl; 
   compute_g.get_G_of_U(solution, new_parabolic_data);
+  std::cout<<"parabolic test 3"<<std::endl;
 }
 
 template void parabolic_solver::prepare<1>(const matrices_for_problem<1> &matrices, const AffineConstraints<double> &in_constraints);

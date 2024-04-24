@@ -25,8 +25,7 @@ void implicit_step::initialize(
 
   rhs_data.reinit(in_mass_matrix.n_block_cols(),
                   in_mass_matrix.block(0, 0).n());
-  data.reinit(in_mass_matrix.n_block_cols(),
-                  in_mass_matrix.block(0, 0).n()); 
+  data.reinit(in_mass_matrix.n_block_cols(), in_mass_matrix.block(0, 0).n());
 }
 
 void implicit_step::set_new_solver(
@@ -48,30 +47,45 @@ void implicit_step::step(const BlockVector<double> &old_U,
                          BlockVector<double> &new_U,
                          const BlockVector<double> &new_rhs_data) {
 
-  std::cout<<"new_rhs_data = "<<new_rhs_data.block(0)<<" "<<new_rhs_data.block(1)<<std::endl<<std::endl; 
+  // std::cout<<"new_rhs_data = "<<new_rhs_data.block(0)<<"
+  // "<<new_rhs_data.block(1)<<std::endl<<std::endl;
+
+  // std::cout<<"old_U = "<<old_U.block(0)<<" "<<old_U.block(1)<<std::endl;
+
+  std::cout << "implicit test 1" << std::endl;
 
   rhs_mass.vmult(rhs_data, old_U);
+  std::cout << "implicit test 2" << std::endl;
   constraints.set_zero(rhs_data.block(0));
+  std::cout << "implict test 3" << std::endl;
   constraints.set_zero(rhs_data.block(1));
 
-  //std::cout << "In airy: rhs_data at mass: " << rhs_data.block(0) 
-  //          << rhs_data.block(1) << std::endl;
+  // std::cout << "In airy: rhs_data at mass: " << rhs_data.block(0)
+  //           << rhs_data.block(1) << std::endl;
 
+  std::cout << "implicit test 4" << std::endl;
   rhs_data.add(1., new_rhs_data);
+
+  // std::cout << "In airy: rhs_data after adding new_rhs_data: "
+  //           << rhs_data.block(0) << rhs_data.block(1) << std::endl;
+  std::cout << "implicit test 5" << std::endl;
   constraints.set_zero(rhs_data.block(0));
   constraints.set_zero(rhs_data.block(1));
 
-  //std::cout << "In airy: rhs_data after addition = " << rhs_data.block(0)
-  //          << std::endl
-  //          << rhs_data.block(1) << std::endl;
+  // std::cout << "In airy: rhs_data after addition = " << rhs_data.block(0)
+  //           << std::endl
+  //           << rhs_data.block(1) << std::endl;
 
+  std::cout << "implicit test 6" << std::endl;
   system_solver.vmult(new_U, rhs_data);
+  std::cout << "implicit test 7" << std::endl;
   constraints.distribute(new_U.block(0));
   constraints.distribute(new_U.block(1));
+  std::cout << "implicit test 8" << std::endl;
 
-  //std::cout << "In airy:: solution = " << new_U.block(0) << new_U.block(1)
-  //          << std::endl
-  //          << std::endl;
+  // std::cout << "In airy:: solution = " << new_U.block(0) << new_U.block(1)
+  //           << std::endl
+  //           << std::endl;
 };
 
 #if 0
@@ -196,22 +210,23 @@ implicit_step::crank_nicholson_step(const BlockVector<double> &U_old) {
 void implicit_step::solve_restriction(BlockVector<double> &U_old,
                                       BlockVector<double> &result) {
 
-  //std::cout<<"restriction_rhs_matrix at solve"<<std::endl;             
-  //restriction_rhs_matrix.print_formatted(std::cout);
-  //std::cout<<std::endl; 
+  // std::cout<<"restriction_rhs_matrix at solve"<<std::endl;
+  // restriction_rhs_matrix.print_formatted(std::cout);
+  // std::cout<<std::endl;
 
   restriction_rhs_matrix.vmult(data, U_old);
   constraints.set_zero(data.block(0));
   constraints.set_zero(data.block(1));
 
-  // std::cout<<"restriction_rhs = "<<data.block(0)<<" "<<data.block(1)<<std::endl<<std::endl; 
-  
+  // std::cout<<"restriction_rhs = "<<data.block(0)<<"
+  // "<<data.block(1)<<std::endl<<std::endl;
+
   restirction_solver.vmult(result, data);
   constraints.distribute(result.block(0));
-  constraints.distribute(result.block(1));  
-  
-  // std::cout<<"U_0 Z_0 = "<<result.block(0)<<" "<<result.block(1)<<std::endl<<std::endl; 
-  
+  constraints.distribute(result.block(1));
+
+  // std::cout<<"U_0 Z_0 = "<<result.block(0)<<"
+  // "<<result.block(1)<<std::endl<<std::endl;
 }
 
 #if 0 

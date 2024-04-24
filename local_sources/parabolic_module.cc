@@ -17,19 +17,19 @@ void pre_step(const std::array<double, stages> weights,
     //           << "] = " << parabolic_data[s].block(0) << std::endl
     //           << parabolic_data[s].block(1) << std::endl;
 
-    std::cout<<"rhs_data before weight "<<s<<" = "<<rhs_data.block(0)<<" "<< rhs_data.block(1)<<std::endl<<std::endl; 
+    // std::cout<<"rhs_data before weight "<<s<<" = "<<rhs_data.block(0)<<" "<< rhs_data.block(1)<<std::endl<<std::endl; 
 
-    std::cout<<"tau = "<<tau<<std::endl<<std::endl; 
+    // std::cout<<"tau = "<<tau<<std::endl<<std::endl; 
 
-    std::cout<<"weight["<<s<<"] = "<<weights[s]<<std::endl<<std::endl; 
+    // std::cout<<"weight["<<s<<"] = "<<weights[s]<<std::endl<<std::endl; 
 
-    std::cout<<"tau * weight["<<s<<"] = "<<tau*weights[s]<<std::endl<<std::endl; 
+    // std::cout<<"tau * weight["<<s<<"] = "<<tau*weights[s]<<std::endl<<std::endl; 
 
-    std::cout<<"parabolic_data["<<s<<"] = "<< parabolic_data[s].block(0)<<" "<<parabolic_data[s].block(1)<<std::endl<<std::endl; 
+    // std::cout<<"parabolic_data["<<s<<"] = "<< parabolic_data[s].block(0)<<" "<<parabolic_data[s].block(1)<<std::endl<<std::endl; 
 
     rhs_data.add(tau * weights[s], parabolic_data[s]);
 
-    std::cout<<"new rhs_data after weight "<<s<<" = "<<rhs_data.block(0)<<" "<<rhs_data.block(1)<<std::endl<<std::endl; 
+    //std::cout<<"new rhs_data after weight "<<s<<" = "<<rhs_data.block(0)<<" "<<rhs_data.block(1)<<std::endl<<std::endl; 
   }
   //std::cout << "rhs_data = " << rhs_data.block(0) << rhs_data.block(1)
   //          << std::endl
@@ -53,5 +53,15 @@ pre_step<2>(const std::array<double, 2> weights,
 
 template void
 pre_step<3>(const std::array<double, 3> weights,
+            const std::vector<BlockVector<double>> &parabolic_data,
+            const double tau, BlockVector<double> &rhs_data);
+
+template void
+pre_step<4>(const std::array<double, 4> weights,
+            const std::vector<BlockVector<double>> &parabolic_data,
+            const double tau, BlockVector<double> &rhs_data);
+
+template void
+pre_step<5>(const std::array<double, 5> weights,
             const std::vector<BlockVector<double>> &parabolic_data,
             const double tau, BlockVector<double> &rhs_data);
